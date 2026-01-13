@@ -1,0 +1,6 @@
+docker run --name mnrpg \
+  -e POSTGRES_USER=mnr \
+  -e POSTGRES_PASSWORD=mnrE \
+  -e POSTGRES_DB=library_db \
+  -p 5432:5432 \
+  -d postgres

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservations Report - Library Management System</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <th:block th:replace="~{fragments/layout :: admin-navbar}"></th:block>
+
+    <!-- Main Content -->
+    <main class="py-4">
+        <div class="container-fluid px-4">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-bookmark-star me-2"></i>Reservations Report
+                    </h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a th:href="@{/admin/reports}">Reports</a></li>
+                            <li class="breadcrumb-item active">Reservations</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="btn-group">
+                    <form th:action="@{/admin/reports/trigger/reservations}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-warning me-2">
+                            <i class="bi bi-arrow-repeat me-1"></i>Process Queue
+                        </button>
+                    </form>
+                    <a th:href="@{/admin/reports/export/reservations}" class="btn btn-success">
+                        <i class="bi bi-download me-1"></i>Export CSV
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filter Form -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-funnel me-2"></i>Filters</h6>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/admin/reports/reservations}" method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="">All Statuses</option>
+                                <option value="PENDING" th:selected="${status == 'PENDING'}">Pending</option>
+                                <option value="READY" th:selected="${status == 'READY'}">Ready for Pickup</option>
+                                <option value="FULFILLED" th:selected="${status == 'FULFILLED'}">Fulfilled</option>
+                                <option value="CANCELLED" th:selected="${status == 'CANCELLED'}">Cancelled</option>
+                                <option value="EXPIRED" th:selected="${status == 'EXPIRED'}">Expired</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bi bi-search me-1"></i>Apply
+                            </button>
+                            <a th:href="@{/admin/reports/reservations}" class="btn btn-outline-secondary">
+                                Reset
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="row mb-4">
+                <div class="col-md-2">
+                    <div class="card border-primary h-100">
+                        <div class="card-body text-center">
+                            <h4 class="text-primary" th:text="${totalReservations}">0</h4>
+                            <small class="text-muted">Total</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-warning h-100">
+                        <div class="card-body text-center">
+                            <h4 class="text-warning" th:text="${pendingCount}">0</h4>
+                            <small class="text-muted">Pending</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-info h-100">
+                        <div class="card-body text-center">
+                            <h4 class="text-info" th:text="${readyCount}">0</h4>
+                            <small class="text-muted">Ready</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-success h-100">
+                        <div class="card-body text-center">
+                            <h4 class="text-success" th:text="${fulfilledCount}">0</h4>
+                            <small class="text-muted">Fulfilled</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-secondary h-100">
+                        <div class="card-body text-center">
+                            <h4 class="text-secondary" th:text="${cancelledCount}">0</h4>
+                            <small class="text-muted">Cancelled</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-danger h-100">
+                        <div class="card-body text-center">
+                            <h4 class="text-danger" th:text="${expiredCount}">0</h4>
+                            <small class="text-muted">Expired</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reservations Table -->
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Reservation Records</h5>
+                    <span class="badge bg-secondary" th:if="${reservations != null}" th:text="${reservations.size()} + ' total'">0 total</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Book</th>
+                                    <th>User</th>
+                                    <th class="text-center">Queue Position</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Expires</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="reservation : ${reservations}">
+                                    <td th:text="${reservation.id}">#</td>
+                                    <td>
+                                        <span th:text="${reservation.book.title}">Book Title</span>
+                                        <br>
+                                        <small class="text-muted" th:text="${reservation.book.isbn}">ISBN</small>
+                                    </td>
+                                    <td>
+                                        <span th:text="${reservation.user.fullName}">User Name</span>
+                                        <br>
+                                        <small class="text-muted" th:text="${reservation.user.email}">email</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-dark" th:text="'#' + ${reservation.queuePosition}">-</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" 
+                                              th:classappend="${reservation.status.name() == 'PENDING' ? 'bg-warning' : 
+                                                              (reservation.status.name() == 'READY' ? 'bg-info' : 
+                                                              (reservation.status.name() == 'FULFILLED' ? 'bg-success' : 
+                                                              (reservation.status.name() == 'CANCELLED' ? 'bg-secondary' : 'bg-danger')))}"
+                                              th:text="${reservation.status}">Status</span>
+                                    </td>
+                                    <td th:text="${#temporals.format(reservation.createdAt, 'MMM dd, yyyy HH:mm')}">Date</td>
+                                    <td>
+                                        <span th:if="${reservation.expirationDate != null}" 
+                                              th:text="${#temporals.format(reservation.expirationDate, 'MMM dd, yyyy')}">Date</span>
+                                        <span th:if="${reservation.expirationDate == null}" class="text-muted">-</span>
+                                    </td>
+                                </tr>
+                                <tr th:if="${reservations == null || #lists.isEmpty(reservations)}">
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox fs-1"></i>
+                                        <p class="mb-0 mt-2">No reservations found</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Books with Most Reservations -->
+            <div class="card mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-fire me-2 text-danger"></i>Most Reserved Books</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-center text-muted py-3">Feature coming soon</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-3 mt-auto">
+        <div class="container-fluid px-4">
+            <div class="d-flex justify-content-between align-items-center small text-muted">
+                <span>&copy; 2024 Library Management System</span>
+                <span>Version 1.0.0</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - Library Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f3f4f6; min-height: 100vh; }
+        
+        .navbar { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar-brand { font-size: 1.3rem; font-weight: 600; }
+        .navbar-nav { display: flex; gap: 20px; }
+        .navbar-nav a { color: white; text-decoration: none; padding: 8px 15px; border-radius: 8px; }
+        .navbar-nav a:hover, .navbar-nav a.active { background: rgba(255,255,255,0.2); }
+        .btn-logout { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 20px; border-radius: 8px; cursor: pointer; }
+
+        .main-content { padding: 30px; max-width: 900px; margin: 0 auto; }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-header h1 { color: #1f2937; font-size: 1.8rem; }
+        
+        .alert { padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; }
+        .alert-success { background: #d1fae5; color: #065f46; }
+
+        .unread-badge { background: #ef4444; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; }
+
+        .notification-list { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+        
+        .notification-item { padding: 20px 25px; border-bottom: 1px solid #e5e7eb; display: flex; gap: 15px; transition: background 0.2s; }
+        .notification-item:last-child { border-bottom: none; }
+        .notification-item:hover { background: #f9fafb; }
+        .notification-item.unread { background: #f0fdf4; border-left: 4px solid #10b981; }
+        
+        .notification-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .notification-content { flex: 1; }
+        .notification-title { font-weight: 600; color: #1f2937; margin-bottom: 5px; }
+        .notification-message { color: #6b7280; font-size: 0.95rem; margin-bottom: 8px; }
+        .notification-time { color: #9ca3af; font-size: 0.85rem; }
+        
+        .notification-actions { display: flex; gap: 10px; flex-shrink: 0; }
+        .notification-actions form { display: inline; }
+        .btn-small { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+        .btn-small.primary { background: #10b981; color: white; }
+        .btn-small.danger { background: #fee2e2; color: #dc2626; }
+
+        .btn { display: inline-block; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 0.9rem; border: none; cursor: pointer; }
+        .btn-primary { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: #6b7280; }
+        .empty-state .icon { font-size: 4rem; margin-bottom: 15px; }
+
+        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 25px; }
+        .pagination a, .pagination span { padding: 8px 15px; border-radius: 8px; text-decoration: none; }
+        .pagination a { background: white; color: #374151; border: 1px solid #e5e7eb; }
+        .pagination a:hover { background: #f3f4f6; }
+        .pagination .active { background: #10b981; color: white; border: none; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">📚 Library Management System</div>
+        <div class="navbar-nav">
+            <a th:href="@{/student/dashboard}">Dashboard</a>
+            <a th:href="@{/student/books}">Browse Books</a>
+            <a th:href="@{/student/my-books}">My Books</a>
+            <a th:href="@{/student/reservations}">Reservations</a>
+            <a th:href="@{/notifications}" class="active">🔔 Notifications</a>
+        </div>
+        <div class="user-info">
+            <form th:action="@{/logout}" method="post" style="margin: 0;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn-logout">Logout</button>
+            </form>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1>🔔 Notifications 
+                <span th:if="${unreadCount > 0}" class="unread-badge" th:text="${unreadCount} + ' unread'">0 unread</span>
+            </h1>
+            <form th:if="${unreadCount > 0}" th:action="@{/notifications/mark-all-read}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-primary">Mark All Read</button>
+            </form>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success">
+            ✓ <span th:text="${successMessage}">Success</span>
+        </div>
+
+        <div class="notification-list">
+            <div th:if="${notifications.isEmpty()}" class="empty-state">
+                <div class="icon">🔔</div>
+                <h3>No Notifications</h3>
+                <p>You're all caught up!</p>
+            </div>
+
+            <div th:each="notification : ${notifications}" 
+                 class="notification-item" 
+                 th:classappend="${!notification.isRead} ? 'unread' : ''">
+                <div class="notification-icon">
+                    <span th:switch="${notification.type.name()}">
+                        <span th:case="'BOOK_DUE_SOON'">📅</span>
+                        <span th:case="'BOOK_OVERDUE'">⚠️</span>
+                        <span th:case="'RESERVATION_READY'">✅</span>
+                        <span th:case="'RESERVATION_EXPIRED'">❌</span>
+                        <span th:case="'FINE_ISSUED'">💰</span>
+                        <span th:case="'FINE_REMINDER'">💳</span>
+                        <span th:case="'BOOK_RETURNED'">📚</span>
+                        <span th:case="'BOOK_ISSUED'">📖</span>
+                        <span th:case="'WELCOME'">👋</span>
+                        <span th:case="*">🔔</span>
+                    </span>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title" th:text="${notification.title}">Notification Title</div>
+                    <div class="notification-message" th:text="${notification.message}">Notification message goes here...</div>
+                    <div class="notification-time" th:text="${#temporals.format(notification.createdAt, 'MMM dd, yyyy HH:mm')}">Jan 12, 2026 10:30</div>
+                </div>
+                <div class="notification-actions">
+                    <form th:if="${!notification.isRead}" th:action="@{/notifications/{id}/read(id=${notification.id})}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit" class="btn-small primary">Mark Read</button>
+                    </form>
+                    <form th:action="@{/notifications/{id}/delete(id=${notification.id})}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit" class="btn-small danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div th:if="${notifications.totalPages > 1}" class="pagination">
+            <a th:if="${notifications.hasPrevious()}" 
+               th:href="@{/notifications(page=${notifications.number - 1})}">← Previous</a>
+            <span th:each="i : ${#numbers.sequence(0, notifications.totalPages - 1)}"
+                  th:class="${i == notifications.number} ? 'active' : ''">
+                <a th:unless="${i == notifications.number}" 
+                   th:href="@{/notifications(page=${i})}" th:text="${i + 1}">1</a>
+                <span th:if="${i == notifications.number}" th:text="${i + 1}">1</span>
+            </span>
+            <a th:if="${notifications.hasNext()}" 
+               th:href="@{/notifications(page=${notifications.number + 1})}">Next →</a>
+        </div>
+    </div>
+</body>
+</html>

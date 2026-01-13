@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Recommendations - BookSphere</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .recommendation-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .recommendation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .ai-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+        .engine-badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+        }
+        .trending-badge {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/student/dashboard">
+                <i class="bi bi-book me-2"></i>BookSphere
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/student/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/student/books">Browse Books</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/recommendations">
+                            <i class="bi bi-stars me-1"></i>AI Recommendations
+                        </a>
+                    </li>
+                </ul>
+                <span class="navbar-text text-white me-3" th:text="'Welcome, ' + ${user.username}">
+                    Welcome, User
+                </span>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <h2>
+                    <i class="bi bi-robot text-primary me-2"></i>
+                    AI-Powered Book Recommendations
+                    <span class="ai-badge ms-2">Powered by ML</span>
+                </h2>
+                <p class="text-muted">
+                    Personalized recommendations based on your reading history and preferences
+                </p>
+            </div>
+        </div>
+
+        <!-- Algorithm Info Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-file-text text-primary fs-1 mb-2"></i>
+                        <h6>Content-Based</h6>
+                        <small class="text-muted">Based on books you've read</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-people text-success fs-1 mb-2"></i>
+                        <h6>Collaborative</h6>
+                        <small class="text-muted">Based on similar readers</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-graph-up text-warning fs-1 mb-2"></i>
+                        <h6>Popularity</h6>
+                        <small class="text-muted">Based on trending books</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personalized Recommendations -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-stars text-warning me-2"></i>
+                    Recommended For You
+                    <span class="badge bg-primary ms-2" th:text="${#lists.size(recommendations)} + ' books'">0 books</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(recommendations)}" class="text-center py-5">
+                    <i class="bi bi-inbox fs-1 text-muted"></i>
+                    <p class="text-muted mt-2">No recommendations available yet. Start borrowing books to get personalized suggestions!</p>
+                    <a href="/student/books" class="btn btn-primary">Browse Books</a>
+                </div>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4" th:unless="${#lists.isEmpty(recommendations)}">
+                    <div class="col" th:each="book : ${recommendations}">
+                        <div class="card recommendation-card h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-secondary" th:text="${book.category?.name ?: 'Unknown'}">Category</span>
+                                    <span class="badge" 
+                                          th:classappend="${book.availableQuantity > 0} ? 'bg-success' : 'bg-danger'"
+                                          th:text="${book.availableQuantity > 0} ? 'Available' : 'Unavailable'">
+                                        Status
+                                    </span>
+                                </div>
+                                <h6 class="card-title" th:text="${book.title}">Book Title</h6>
+                                <p class="card-text text-muted small mb-2">
+                                    <i class="bi bi-person me-1"></i>
+                                    <span th:text="${book.author}">Author</span>
+                                </p>
+                                <p class="card-text text-muted small">
+                                    <i class="bi bi-calendar me-1"></i>
+                                    <span th:text="${book.publicationYear}">Year</span>
+                                </p>
+                            </div>
+                            <div class="card-footer bg-transparent border-0">
+                                <a th:href="@{/student/books/{id}(id=${book.id})}" 
+                                   class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="bi bi-eye me-1"></i>View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trending Books -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-fire text-danger me-2"></i>
+                    Trending Now
+                    <span class="badge trending-badge ms-2">Last 30 days</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(trending)}" class="text-center py-4">
+                    <p class="text-muted">No trending books at the moment.</p>
+                </div>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3" th:unless="${#lists.isEmpty(trending)}">
+                    <div class="col" th:each="book, iter : ${trending}" th:if="${iter.index < 8}">
+                        <div class="card border-0 bg-light h-100">
+                            <div class="card-body py-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-danger me-2" th:text="'#' + ${iter.index + 1}">#1</span>
+                                    <div>
+                                        <h6 class="mb-0 small" th:text="${book.title}">Title</h6>
+                                        <small class="text-muted" th:text="${book.author}">Author</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Documentation -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-code-slash text-info me-2"></i>
+                    Recommendation API Endpoints
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small">The following API endpoints are available for developers:</p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Algorithm</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>/recommendations/api/hybrid</code></td>
+                                <td><span class="badge bg-primary">Hybrid</span></td>
+                                <td>Combined recommendations from all engines</td>
+                            </tr>
+                            <tr>
+                                <td><code>/recommendations/api/content-based</code></td>
+                                <td><span class="badge bg-info">Content</span></td>
+                                <td>Based on similar book attributes</td>
+                            </tr>
+                            <tr>
+                                <td><code>/recommendations/api/collaborative</code></td>
+                                <td><span class="badge bg-success">Collaborative</span></td>
+                                <td>Based on similar user preferences</td>
+                            </tr>
+                            <tr>
+                                <td><code>/recommendations/api/popularity</code></td>
+                                <td><span class="badge bg-warning text-dark">Popularity</span></td>
+                                <td>Based on borrowing frequency</td>
+                            </tr>
+                            <tr>
+                                <td><code>/recommendations/api/trending?days=30</code></td>
+                                <td><span class="badge bg-danger">Trending</span></td>
+                                <td>Most borrowed in recent days</td>
+                            </tr>
+                            <tr>
+                                <td><code>/recommendations/api/async</code></td>
+                                <td><span class="badge bg-secondary">Async</span></td>
+                                <td>Non-blocking async recommendations</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">
+                <i class="bi bi-book me-2"></i>
+                BookSphere &copy; 2026
+            </p>
+            <small class="text-muted">AI Recommendations powered by Content-Based, Collaborative, and Popularity Filtering</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

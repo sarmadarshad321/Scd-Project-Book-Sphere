@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BookSphere - A comprehensive solution for managing library operations">
+    <title>BookSphere</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        /* Hero Section */
+        .hero-section {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            max-width: 600px;
+        }
+        
+        .btn-hero {
+            padding: 0.875rem 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-hero-primary {
+            background: white;
+            color: var(--primary);
+            border: none;
+        }
+        
+        .btn-hero-primary:hover {
+            background: #f8fafc;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .btn-hero-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+        
+        .btn-hero-outline:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: white;
+            color: white;
+        }
+        
+        /* Feature Cards */
+        .feature-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Stats Section */
+        .stats-section {
+            background: rgba(0,0,0,0.1);
+            padding: 3rem 0;
+            margin-top: 3rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Floating Elements */
+        .floating-book {
+            position: absolute;
+            opacity: 0.1;
+            font-size: 8rem;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .floating-book:nth-child(1) {
+            top: 10%;
+            right: 10%;
+            animation-delay: 0s;
+        }
+        
+        .floating-book:nth-child(2) {
+            bottom: 20%;
+            left: 5%;
+            animation-delay: 2s;
+        }
+        
+        .floating-book:nth-child(3) {
+            top: 40%;
+            right: 25%;
+            font-size: 5rem;
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        
+        /* Login Modal Styling */
+        .modal-login .modal-content {
+            border: none;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        
+        .modal-login .modal-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            padding: 1.5rem 2rem;
+        }
+        
+        .modal-login .modal-body {
+            padding: 2rem;
+        }
+        
+        .modal-login .btn-close {
+            filter: brightness(0) invert(1);
+        }
+        
+        /* Quick Login Cards */
+        .quick-login-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quick-login-card:hover {
+            border-color: var(--primary);
+            background: #f8fafc;
+        }
+        
+        .quick-login-card.admin {
+            border-color: var(--primary);
+        }
+        
+        .quick-login-card.student {
+            border-color: var(--success);
+        }
+        
+        .quick-login-card .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.75rem;
+            font-size: 1.25rem;
+        }
+        
+        .quick-login-card.admin .icon {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+        }
+        
+        .quick-login-card.student .icon {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+            
+            .floating-book {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hero Section -->
+    <section class="hero-section text-white">
+        <!-- Floating Books -->
+        <i class="bi bi-book floating-book"></i>
+        <i class="bi bi-journal-bookmark floating-book"></i>
+        <i class="bi bi-book-half floating-book"></i>
+        
+        <div class="container hero-content">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-5 mb-lg-0">
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="bi bi-book-half fs-1 me-3"></i>
+                        <span class="badge bg-white text-primary px-3 py-2 rounded-pill">v1.0.0</span>
+                    </div>
+                    
+                    <h1 class="hero-title">BookSphere</h1>
+                    <p class="hero-subtitle">
+                        A comprehensive solution for managing library operations, book inventory, 
+                        student transactions, and more. Built with Spring Boot & modern technologies.
+                    </p>
+                    
+                    <div class="d-flex flex-wrap gap-3">
+                        <button class="btn btn-hero btn-hero-primary" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        </button>
+                        <a href="#features" class="btn btn-hero btn-hero-outline">
+                            <i class="bi bi-info-circle me-2"></i>Learn More
+                        </a>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="stats-section rounded-4 mt-5">
+                        <div class="row g-4">
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <div class="stat-value" th:text="${totalBooks} ?: '100+'">100+</div>
+                                    <div class="stat-label">Books</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <div class="stat-value" th:text="${totalUsers} ?: '50+'">50+</div>
+                                    <div class="stat-label">Users</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <div class="stat-value" th:text="${totalCategories} ?: '10+'">10+</div>
+                                    <div class="stat-label">Categories</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6" id="features">
+                    <div class="row g-4">
+                        <div class="col-sm-6">
+                            <div class="feature-card h-100">
+                                <div class="feature-icon">
+                                    <i class="bi bi-book"></i>
+                                </div>
+                                <h5 class="fw-semibold mb-2">Book Management</h5>
+                                <p class="small opacity-75 mb-0">Add, edit, and manage your entire book collection with ease.</p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="feature-card h-100">
+                                <div class="feature-icon">
+                                    <i class="bi bi-people"></i>
+                                </div>
+                                <h5 class="fw-semibold mb-2">User Management</h5>
+                                <p class="small opacity-75 mb-0">Manage students, librarians, and administrators efficiently.</p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="feature-card h-100">
+                                <div class="feature-icon">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                </div>
+                                <h5 class="fw-semibold mb-2">Transactions</h5>
+                                <p class="small opacity-75 mb-0">Track book issues, returns, and manage due dates seamlessly.</p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="feature-card h-100">
+                                <div class="feature-icon">
+                                    <i class="bi bi-graph-up"></i>
+                                </div>
+                                <h5 class="fw-semibold mb-2">Reports & Analytics</h5>
+                                <p class="small opacity-75 mb-0">Generate insights with comprehensive reports and statistics.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div class="modal fade modal-login" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title mb-1">
+                            <i class="bi bi-book-half me-2"></i>Welcome Back
+                        </h5>
+                        <p class="small mb-0 opacity-75">Sign in to access the library system</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Login Form -->
+                    <form th:action="@{/login}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-person text-muted"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0" name="username" 
+                                       placeholder="Enter your username" required autofocus>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-lock text-muted"></i>
+                                </span>
+                                <input type="password" class="form-control border-start-0" name="password" 
+                                       placeholder="Enter your password" required>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="rememberMe" name="remember-me">
+                                <label class="form-check-label small" for="rememberMe">Remember me</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-medium">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        </button>
+                    </form>
+                    
+                    <hr class="my-4">
+                    
+                    <!-- Quick Login Section -->
+                    <p class="text-center text-muted small mb-3">Quick Login (Demo Accounts)</p>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="quick-login-card admin" onclick="quickLogin('admin', 'admin123')">
+                                <div class="icon">
+                                    <i class="bi bi-shield-check"></i>
+                                </div>
+                                <div class="fw-medium">Admin</div>
+                                <div class="small text-muted">admin / admin123</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="quick-login-card student" onclick="quickLogin('student1', 'student123')">
+                                <div class="icon">
+                                    <i class="bi bi-mortarboard"></i>
+                                </div>
+                                <div class="fw-medium">Student</div>
+                                <div class="small text-muted">student1 / student123</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Alert (if any) -->
+    <div th:if="${param.error}" class="position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index: 9999;">
+        <div class="alert alert-danger alert-dismissible fade show shadow-lg" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Invalid username or password. Please try again.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+
+    <!-- Logout Success Alert -->
+    <div th:if="${param.logout}" class="position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index: 9999;">
+        <div class="alert alert-success alert-dismissible fade show shadow-lg" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            You have been logged out successfully.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Quick login function
+        function quickLogin(username, password) {
+            document.querySelector('input[name="username"]').value = username;
+            document.querySelector('input[name="password"]').value = password;
+            document.querySelector('form').submit();
+        }
+        
+        // Auto-dismiss alerts
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+        
+        // Show login modal if error
+        if (window.location.search.includes('error')) {
+            const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+            modal.show();
+        }
+    </script>
+</body>
+</html>

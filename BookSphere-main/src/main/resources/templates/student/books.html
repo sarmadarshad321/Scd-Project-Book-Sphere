@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Books - BookSphere</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-gradient-success sticky-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" th:href="@{/student/dashboard}">
+                <i class="bi bi-book-half fs-4 me-2"></i>
+                <span class="fw-semibold">BookSphere</span>
+                <span class="badge bg-white text-success ms-2 small">STUDENT</span>
+            </a>
+            
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/student/dashboard}">
+                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/student/books}">
+                            <i class="bi bi-search me-1"></i>Browse Books
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/student/my-books}">
+                            <i class="bi bi-book me-1"></i>My Books
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/student/reservations}">
+                            <i class="bi bi-bookmark me-1"></i>Reservations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/student/fines}">
+                            <i class="bi bi-credit-card me-1"></i>Fines
+                        </a>
+                    </li>
+                </ul>
+                
+                <div class="d-flex align-items-center">
+                    <div class="dropdown">
+                        <button class="btn btn-link text-white text-decoration-none dropdown-toggle d-flex align-items-center" 
+                                data-bs-toggle="dropdown">
+                            <div class="rounded-circle bg-white text-success d-flex align-items-center justify-content-center me-2" 
+                                 style="width: 32px; height: 32px;">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <span class="d-none d-md-inline" th:text="${user?.fullName ?: 'Student'}">Student</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li class="dropdown-header">
+                                <div class="fw-medium" th:text="${user?.fullName ?: 'Student'}">Student</div>
+                                <small class="text-muted" th:text="${user?.email ?: ''}">student@example.com</small>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" th:href="@{/student/profile}">
+                                    <i class="bi bi-person me-2"></i>Profile
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="px-0">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="py-4">
+        <div class="container-fluid px-4">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="bi bi-search me-2"></i>Browse Books
+                    </h1>
+                    <p class="text-muted mb-0">Search and discover books from our library collection</p>
+                </div>
+            </div>
+
+            <!-- Search & Filter Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form th:action="@{/student/books}" method="get">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-lg-4 col-md-6">
+                                <label class="form-label small text-muted fw-medium">Search</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="bi bi-search text-muted"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0" name="search" 
+                                           th:value="${search}" placeholder="Title, author, or ISBN...">
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6">
+                                <label class="form-label small text-muted fw-medium">Category</label>
+                                <select name="categoryId" class="form-select">
+                                    <option value="">All Categories</option>
+                                    <option th:each="cat : ${categories}" 
+                                            th:value="${cat.id}" 
+                                            th:text="${cat.name}"
+                                            th:selected="${categoryId != null && categoryId == cat.id}">
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-lg-2 col-md-4">
+                                <label class="form-label small text-muted fw-medium">Availability</label>
+                                <select name="availability" class="form-select">
+                                    <option value="all" th:selected="${availability == 'all'}">All Books</option>
+                                    <option value="available" th:selected="${availability == 'available'}">Available Only</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-3 col-md-8">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-success flex-grow-1">
+                                        <i class="bi bi-search me-1"></i>Search
+                                    </button>
+                                    <a th:href="@{/student/books}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-x-lg"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <span class="text-muted">
+                    <span th:text="'Showing ' + ${books.numberOfElements} + ' of ' + ${totalItems} + ' books'">Showing results</span>
+                </span>
+                <form th:action="@{/student/books}" method="get" id="sortForm" class="d-flex align-items-center gap-2">
+                    <input type="hidden" name="search" th:value="${search}">
+                    <input type="hidden" name="categoryId" th:value="${categoryId}">
+                    <input type="hidden" name="availability" th:value="${availability}">
+                    <label class="text-muted small me-2">Sort by:</label>
+                    <select name="sortBy" class="form-select form-select-sm" style="width: auto;" 
+                            onchange="document.getElementById('sortForm').submit()">
+                        <option value="title" th:selected="${sortBy == 'title'}">Title</option>
+                        <option value="author" th:selected="${sortBy == 'author'}">Author</option>
+                        <option value="publicationYear" th:selected="${sortBy == 'publicationYear'}">Year</option>
+                    </select>
+                </form>
+            </div>
+
+            <!-- Book Grid -->
+            <div th:if="${books.hasContent()}" class="row g-4">
+                <div th:each="book : ${books}" class="col-sm-6 col-lg-4 col-xl-3">
+                    <div class="card border-0 shadow-sm h-100 card-hover">
+                        <div class="card-img-top bg-gradient-success d-flex align-items-center justify-content-center text-white" 
+                             style="height: 160px;">
+                            <i class="bi bi-book fs-1"></i>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title text-truncate" th:text="${book.title}" title="${book.title}">Book Title</h5>
+                            <p class="card-text text-muted small mb-2">
+                                <i class="bi bi-person me-1"></i>
+                                <span th:text="${book.author}">Author Name</span>
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge bg-light text-dark" th:text="${book.categoryName ?: 'Uncategorized'}">Category</span>
+                                <span class="small"
+                                      th:classappend="${book.availableQuantity > 0} ? 'text-success' : 'text-danger'"
+                                      th:text="${book.availableQuantity > 0 ? book.availableQuantity + ' available' : 'Not available'}">
+                                    Status
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0 pt-0">
+                            <a th:href="@{/student/books/{id}(id=${book.id})}" class="btn btn-success w-100">
+                                <i class="bi bi-eye me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${!books.hasContent()}" class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-book fs-1 text-muted d-block mb-3"></i>
+                    <h5 class="text-muted">No books found</h5>
+                    <p class="text-muted mb-3">Try adjusting your search criteria or browse all categories.</p>
+                    <a th:href="@{/student/books}" class="btn btn-success">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Browse All Books
+                    </a>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <nav th:if="${totalPages > 1}" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link" 
+                           th:href="@{/student/books(search=${search}, categoryId=${categoryId}, availability=${availability}, page=${currentPage - 1}, sortBy=${sortBy})}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    
+                    <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                        <li class="page-item" 
+                            th:if="${i >= currentPage - 2 && i <= currentPage + 2}"
+                            th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link" 
+                               th:href="@{/student/books(search=${search}, categoryId=${categoryId}, availability=${availability}, page=${i}, sortBy=${sortBy})}"
+                               th:text="${i + 1}">1</a>
+                        </li>
+                    </th:block>
+                    
+                    <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                        <a class="page-link" 
+                           th:href="@{/student/books(search=${search}, categoryId=${categoryId}, availability=${availability}, page=${currentPage + 1}, sortBy=${sortBy})}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-3 mt-auto">
+        <div class="container-fluid px-4">
+            <div class="d-flex justify-content-between align-items-center small text-muted">
+                <span>&copy; 2024 BookSphere</span>
+                <span>Version 1.0.0</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>

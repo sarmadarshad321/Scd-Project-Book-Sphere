@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Reservations - BookSphere</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+        }
+        
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .navbar-nav a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+        
+        .navbar-nav a:hover, .navbar-nav a.active {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+        
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* Main Content */
+        .main-content {
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            margin-bottom: 25px;
+        }
+        
+        .page-header h1 {
+            color: #1f2937;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .page-header p {
+            color: #6b7280;
+        }
+        
+        /* Alert Messages */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        /* Section */
+        .section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 20px 25px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .section-header.history {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-body {
+            padding: 25px;
+        }
+        
+        /* Reservation Cards */
+        .reservation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .reservation-card {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .reservation-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .book-icon {
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .reservation-details {
+            flex: 1;
+        }
+        
+        .book-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+        
+        .book-author {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        
+        .reservation-meta {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .meta-item {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        .meta-item strong {
+            color: #374151;
+        }
+        
+        /* Queue Position Badge */
+        .queue-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-badge.fulfilled {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-badge.cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-badge.expired {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+        
+        /* Action Buttons */
+        .reservation-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .btn-danger:hover {
+            background: #fecaca;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6b7280;
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state h3 {
+            color: #374151;
+            margin-bottom: 10px;
+        }
+        
+        .empty-state a {
+            color: #10b981;
+            text-decoration: none;
+        }
+        
+        .empty-state a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        tr:hover {
+            background: #f9fafb;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .navbar-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .reservation-card {
+                flex-direction: column;
+            }
+            
+            .reservation-meta {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .reservation-actions {
+                margin-top: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            📚 BookSphere
+        </div>
+        <div class="navbar-nav">
+            <a th:href="@{/student/dashboard}">Dashboard</a>
+            <a th:href="@{/student/books}">Browse Books</a>
+            <a th:href="@{/student/my-books}">My Books</a>
+            <a th:href="@{/student/reservations}" class="active">Reservations</a>
+            <a th:href="@{/student/fines}">Fines</a>
+            <a th:href="@{/student/profile}">Profile</a>
+        </div>
+        <div class="user-info">
+            <span th:text="${user.fullName}">Student Name</span>
+            <form th:action="@{/logout}" method="post" style="margin: 0;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn-logout">Logout</button>
+            </form>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="page-header">
+            <h1>🔔 My Reservations</h1>
+            <p>Manage your book reservations and track your queue position</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div th:if="${successMessage}" class="alert alert-success">
+            ✓ <span th:text="${successMessage}">Success message</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error">
+            ✕ <span th:text="${errorMessage}">Error message</span>
+        </div>
+
+        <!-- Pending Reservations -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">⏳ Pending Reservations</h2>
+            </div>
+            <div class="section-body">
+                <div th:if="${#lists.isEmpty(pendingReservations)}" class="empty-state">
+                    <div class="empty-state-icon">🔔</div>
+                    <h3>No pending reservations</h3>
+                    <p>You don't have any active reservations. <a th:href="@{/student/books}">Browse books</a> to make a reservation.</p>
+                </div>
+                
+                <div th:if="${!#lists.isEmpty(pendingReservations)}" class="reservation-list">
+                    <div th:each="reservation : ${pendingReservations}" class="reservation-card">
+                        <div class="book-icon">📚</div>
+                        <div class="reservation-details">
+                            <h3 class="book-title" th:text="${reservation.book.title}">Book Title</h3>
+                            <p class="book-author" th:text="'by ' + ${reservation.book.author}">by Author</p>
+                            <div class="reservation-meta">
+                                <span class="meta-item">
+                                    <strong>Reserved:</strong> 
+                                    <span th:text="${#temporals.format(reservation.reservationDate, 'MMM dd, yyyy')}">Jan 01, 2024</span>
+                                </span>
+                                <span class="meta-item">
+                                    <strong>Expires:</strong> 
+                                    <span th:text="${#temporals.format(reservation.expiryDate, 'MMM dd, yyyy')}">Jan 08, 2024</span>
+                                </span>
+                                <span class="meta-item">
+                                    <span class="queue-badge" th:text="'#' + ${reservation.queuePosition} + ' in queue'">#1 in queue</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="reservation-actions">
+                            <form th:action="@{/student/reservations/{id}/cancel(id=${reservation.id})}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit" class="btn btn-danger" 
+                                        onclick="return confirm('Are you sure you want to cancel this reservation?')">
+                                    Cancel
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reservation History -->
+        <div class="section">
+            <div class="section-header history">
+                <h2 class="section-title">📜 Reservation History</h2>
+            </div>
+            <div class="section-body">
+                <div th:if="${#lists.isEmpty(reservations)}" class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <h3>No reservation history</h3>
+                    <p>Your reservation history will appear here.</p>
+                </div>
+                
+                <div th:if="${!#lists.isEmpty(reservations)}" class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Book</th>
+                                <th>Reserved Date</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="reservation : ${reservations}">
+                                <td>
+                                    <strong th:text="${reservation.book.title}">Book Title</strong><br>
+                                    <small th:text="'by ' + ${reservation.book.author}" style="color: #6b7280;">by Author</small>
+                                </td>
+                                <td th:text="${#temporals.format(reservation.reservationDate, 'MMM dd, yyyy')}">Jan 01, 2024</td>
+                                <td th:text="${#temporals.format(reservation.expiryDate, 'MMM dd, yyyy')}">Jan 08, 2024</td>
+                                <td>
+                                    <span th:if="${reservation.status.name() == 'PENDING'}" class="status-badge pending">Pending</span>
+                                    <span th:if="${reservation.status.name() == 'FULFILLED'}" class="status-badge fulfilled">Fulfilled</span>
+                                    <span th:if="${reservation.status.name() == 'CANCELLED'}" class="status-badge cancelled">Cancelled</span>
+                                    <span th:if="${reservation.status.name() == 'EXPIRED'}" class="status-badge expired">Expired</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

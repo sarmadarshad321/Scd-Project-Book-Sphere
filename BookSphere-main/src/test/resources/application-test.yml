@@ -1,0 +1,35 @@
+# Test Configuration - H2 In-Memory Database
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  
+  h2:
+    console:
+      enabled: false
+
+# Disable scheduling during tests
+  task:
+    scheduling:
+      pool:
+        size: 1
+
+# Logging - minimal for tests
+logging:
+  level:
+    root: WARN
+    com.library.management: INFO
+    org.springframework.security: WARN
+
+# Security settings for testing
+server:
+  error:
+    include-message: always
